@@ -15,7 +15,7 @@ from .fixmatch_utils import consistency_loss, Get_Scalar, CSLLabeled, CSLUnlabel
 from utils import get_metrics
 import wandb
 
-from sklearn.metrics import recall_score
+from sklearn.metrics import recall_score, confusion_matrix
 
 class FixMatch:
     def __init__(self, net_builder, num_classes, ema_m, T, p_cutoff, lambda_u, vlr,\
@@ -294,15 +294,83 @@ class FixMatch:
             eval_model.train()
         logits_, labels_ = (np.concatenate(logits_, axis=0), np.concatenate(labels_, axis=0))
 
-        recall = recall_score(labels_, logits_, average=None, zero_division=0)
-        new_lamdas = [x * np.exp(-1 * self.val_lr * r) for x, r in zip(self.lambdas, recall.tolist())]
-        new_lamdas = [x/sum(new_lamdas) for x in new_lamdas]
-        self.lambdas = new_lamdas
-        diagonal = [x/p for x,p in zip(self.lambdas, self.prior)]
-        G = np.diag(diagonal)        
+        G = self.get_gain(logits_, labels_)
+                
         criterion_l = CSLLabeled(G, device)
         criterion_u = CSLUnlabeled(G, kl_thresh=args.kl_thresh, device=device)
         return criterion_l, criterion_u
+    
+    def get_gain(self, logits, labels):
+        if self.args.M == "min_recall":
+            recall = recall_score(labels, logits, average=None, zero_division=0)
+            new_lamdas = [x * np.exp(-1 * self.val_lr * r) for x, r in zip(self.lambdas, recall.tolist())]
+            new_lamdas = [x/sum(new_lamdas) for x in new_lamdas]
+            self.lambdas = new_lamdas
+            diagonal = [x/p for x,p in zip(self.lambdas, self.prior)]
+            G = np.diag(diagonal)
+        elif self.args.M == "mean_recall_coverage":
+            CM = confusion_matrix(labels, logits, normalize="all")
+            new_lamdas = []
+            C = np.sum(CM, axis=0).tolist()
+            for i, (l, c, p) in enumerate(zip(self.lambdas, C, self.prior)):
+                l_ = l - self.val_lr * (c - 0.95/self.num_classes)
+                l_ = max(0, l_)
+                new_lamdas.append(l_)
+            G = np.zeros((self.num_classes, self.num_classes))
+            D = np.zeros((self.num_classes, self.num_classes))
+            for i in range(self.num_classes):
+                for j in range(self.num_classes):
+                    if i==j:
+                        G[i, i] = (1.0/self.num_classes)/self.prior[i] + new_lamdas[j]
+                        D[i, i] = (1.0/self.num_classes)/self.prior[i] + new_lamdas[j]
+                    else:
+                        G[i, j] = new_lamdas[j]
+        elif self.args.M == "min_ht_recall":
+            logits_, labels_ = (np.concatenate(logits_, axis=0), np.concatenate(labels_, axis=0))
+
+            recall = recall_score(labels_, logits_, average=None, zero_division=0)
+            head_recall = np.mean(recall[:int(0.9 * self.num_classes)])
+            tail_recall = np.mean(recall[int(0.9 * self.num_classes):])
+
+            lamda_h, lamda_t = self.lambdas[0], self.lambdas[-1]
+
+            lamda_h = lamda_h * np.exp(-1 * self.val_lr * head_recall)
+            lamda_t = lamda_t * np.exp(-1 * self.val_lr * tail_recall)
+
+            lamda_h = lamda_h/(lamda_h + lamda_t)
+            lamda_t = 1 - lamda_h
+
+            new_lamdas_ = [lamda_h/(0.9 * self.num_classes)] * int(0.9 * self.num_classes) + \
+                        [lamda_t/(0.1 * self.num_classes)] * int(0.1 * self.num_classes)
+            self.lambdas = [lamda_h] * int(0.9 * self.num_classes) + [lamda_t] * int(0.1 * self.num_classes)
+        
+            diagonal = [x/p for x,p in zip(self.lambdas, self.prior)]
+            G = np.diag(diagonal)
+        elif self.args.M == "mean_recall_ht_coverage":
+            new_lamdas = []
+            CM = confusion_matrix(labels, logits, normalize="all")
+            C = np.sum(CM, axis=0).tolist()
+
+            l_head, l_tail = self.lambdas[0], self.lambdas[-1]
+            head_coverage, tail_coverage =  np.mean(C[:int(0.9 * self.num_classes)]),\
+                                            np.mean(C[int(0.9 * self.num_classes):]) 
+            l_head = l_head - self.val_lr * (head_coverage - 0.95/self.num_classes)
+            l_tail = l_tail - self.val_lr * (tail_coverage - 0.95/self.num_classes)
+            l_head = max(0, l_head)
+            l_tail = max(0, l_tail)
+            new_lamdas = [l_head] * int(0.9 * self.num_classes) + [l_tail] * int(0.1 * self.num_classes)
+
+            G = np.zeros((self.num_classes, self.num_classes))
+            D = np.zeros((self.num_classes, self.num_classes))
+
+            for i in range(self.num_classes):
+                for j in range(self.num_classes):
+                    if i==j:
+                        G[i, i] = (1.0/self.num_classes)/self.prior[i] + new_lamdas[j]/int(0.9 * self.num_classes)
+                        D[i, i] = (1.0/self.num_classes)/self.prior[i] + new_lamdas[j]/int(0.1 * self.num_classes)
+                    else:
+                        G[i, j] = new_lamdas[j]
+        return G
 
     def save_model(self, save_name, save_path):
         save_filename = os.path.join(save_path, save_name)
