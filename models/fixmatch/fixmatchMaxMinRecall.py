@@ -8,10 +8,9 @@ from torch.cuda.amp import autocast, GradScaler
 
 import os
 import contextlib
-from train_utils import AverageMeter
 
-from .fixmatch_utils import consistency_loss, Get_Scalar, CSLLoss, CSL_consistency_loss
-from train_utils import ce_loss
+
+from .fixmatch_utils import consistency_loss, Get_Scalar, CSLLabeled, CSLUnlabeled
 
 from utils import get_metrics
 import wandb
@@ -123,7 +122,7 @@ class FixMatch:
 
         for (x_lb, y_lb), (x_ulb_w, x_ulb_s, _) in zip(self.loader_dict['train_lb'], self.loader_dict['train_ulb']):
             if self.it % self.num_eval_iter == 0:
-                criterion = self.validate(args)
+                criterion_l, criterion_u = self.validate(args)
                 
             # prevent the training iterations exceed args.num_train_iter
             if self.it > args.num_train_iter:
@@ -153,11 +152,8 @@ class FixMatch:
                 T = self.t_fn(self.it)
                 p_cutoff = self.p_fn(self.it)
 
-                sup_loss = criterion(logits_x_lb, y_lb, reduction='mean')
-                unsup_loss, mask = CSL_consistency_loss(logits_x_ulb_w, 
-                                                    logits_x_ulb_s, 
-                                                    criterion, T, p_cutoff,
-                                                    use_hard_labels=args.hard_label)
+                sup_loss = criterion_l(logits_x_lb, y_lb, reduction='mean')
+                unsup_loss, mask = criterion_u(logits_x_ulb_w, logits_x_ulb_s)
                 if args.vanilla_opt:
                     total_loss = sup_loss + self.lambda_u * unsup_loss
                 else:
@@ -304,8 +300,9 @@ class FixMatch:
         self.lambdas = new_lamdas
         diagonal = [x/p for x,p in zip(self.lambdas, self.prior)]
         G = np.diag(diagonal)        
-        criterion = CSLLoss(G, device)
-        return criterion
+        criterion_l = CSLLabeled(G, device)
+        criterion_u = CSLUnlabeled(G, kl_thresh=args.kl_thresh, device=device)
+        return criterion_l, criterion_u
 
     def save_model(self, save_name, save_path):
         save_filename = os.path.join(save_path, save_name)

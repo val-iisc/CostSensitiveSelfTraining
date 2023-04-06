@@ -192,8 +192,8 @@ def main_worker(gpu, ngpus_per_node, args):
 
     # Construct Dataset & DataLoader
     if "cifar" in args.dataset:
-        from ImbalancedSSL import get_cifar10
-        lb, ulb, val, eval = get_cifar10("./data", 1500, 3000, 5000, 100, 100, False, 0, "exp")
+        from ImbalancedSSL import get_cifar
+        lb, ulb, val, eval = get_cifar("./data", args.dataset, 1500, 3000, 5000, 100, 100, False, 0, "exp")
     import torchvision
     model.classes = torchvision.datasets.CIFAR10("./data", True).classes
 
@@ -283,6 +283,7 @@ if __name__ == "__main__":
     parser.add_argument('--ulb_loss_ratio', type=float, default=1.0)
     parser.add_argument('--imbalance', type=float, default=100.0)
     parser.add_argument('--vlr', type=float, default=0.1)
+    parser.add_argument('--kl_thresh', type=float, default=0.05)
     
     '''
     Optimizer configurations
