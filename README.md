@@ -1,5 +1,7 @@
-# CostSensitiveSelfTraining
-This repository contains the code for our work CSST: Cost Sensitive Self Training for Optimizing Non-Decomposable Objectives
+# CSST
+**Cost Sensitive Self-Training for Optimising Non-decomposable Measures**
+
+**Authors**: Harsh Rangwani, Shrinivas Ramasubramanian, Sho Takemori, Kato Takashi, Yuhei Umeda, Venkatesh Babu Radhakrishnan
 
 ## Usage
 
