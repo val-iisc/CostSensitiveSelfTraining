@@ -4,18 +4,7 @@
 **Authors**: Harsh Rangwani, Shrinivas Ramasubramanian, Sho Takemori, Kato Takashi, Yuhei Umeda, Venkatesh Babu Radhakrishnan
 
 ### Introduction 
-Self-training based semi-supervised learning algorithms have enabled the learning
-of highly accurate deep neural networks, using only a fraction of labeled data.
-However, the majority of work on self-training has focused on the objective of
-improving accuracy whereas practical machine learning systems can have complex goals (e.g. maximizing the minimum of recall across classes etc.) that are
-non-decomposable in nature. In this work, we introduce the Cost-Sensitive SelfTraining (CSST) framework which generalizes the self-training-based methods for
-optimizing non-decomposable metrics. We prove that our framework can better
-optimize the desired non-decomposable metric utilizing unlabeled data, under
-similar data distribution assumptions made for the analysis of self-training. Using
-the proposed CSST framework we obtain practical self-training methods (for both
-vision and NLP tasks) for optimizing different non-decomposable metrics using
-deep neural networks. Our results demonstrate that CSST achieves an improvement
-over the state-of-the-art in majority of the cases across datasets and objectives.
+Self-training with semi-supervised learning algorithms allows highly accurate deep neural networks to be learned using only a fraction of labeled data. However, most self-training work focuses on improving accuracy, while practical machine learning systems have non-decomposable goals, such as maximizing recall across classes. We introduce the Cost-Sensitive Self-Training (CSST) framework, which generalizes self-training methods for optimizing non-decomposable metrics. Our framework can better optimize desired metrics using unlabeled data, under similar data distribution assumptions made for the analysis of self-training. Using CSST, we obtain practical self-training methods for optimizing different non-decomposable metrics in both vision and NLP tasks. Our results show that CSST outperforms the state-of-the-art in most cases across datasets and objectives.
 
 ## Usage
 
