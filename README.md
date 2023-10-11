@@ -28,6 +28,10 @@ pip install -r requirements.txt
 3. We recommend installation of [W&B](https://wandb.ai/) (weights and biases for detailed logging of performance metrics 
 
 ### Training
+We present a sample training command for CIFAR-10 under imbalance factor 100 and labeled and unlabeled data split ratio of 1/4.  We can change the objective as per requirement (--M argument, see docs)
+```bash
+python trainMetricOpt.py --M mean_recall_coverage --world-size 1 --rank 0 --multiprocessing-distributed --uratio 4 --num_labels 12500 --save_name <local logging name> --dataset cifar10 --imbalance 100 --num_classes 10 --amp --net WideResNet --overwrite  --widen_factor 2 --wandb-project <Project name> --wandb-runid <your-runid> --vanilla_opt True --ult True  --num_workers 4
+```
 
 ### Evaluation
 
