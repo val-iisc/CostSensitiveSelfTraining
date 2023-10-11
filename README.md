@@ -14,6 +14,16 @@ Self-training with semi-supervised learning algorithms allows highly accurate de
 
 ### Installation
 
+1. Create a conda environment
+```bash
+conda create -n CSST
+```
+2. Install the requisite libraries
+```bash
+pip install -r requirements.txt
+```
+3. We recommend installation of [W&B](https://wandb.ai/) (weights and biases for detailed logging of performance metrics 
+
 ### Training
 
 ### Evaluation
