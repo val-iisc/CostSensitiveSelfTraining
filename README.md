@@ -14,9 +14,10 @@ Self-training with semi-supervised learning algorithms allows highly accurate de
 
 ### Installation
 
-1. Create a conda environment
+1. Create and activate a conda environment
 ```bash
 conda create -n CSST
+conda activate CSST
 ```
 2. Install the requisite libraries
 ```bash
