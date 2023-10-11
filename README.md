@@ -19,8 +19,10 @@ Self-training with semi-supervised learning algorithms allows highly accurate de
 conda create -n CSST
 conda activate CSST
 ```
-2. Install the requisite libraries
+2. Clone and install the requisite libraries
 ```bash
+git clone https://github.com/val-iisc/CostSensitiveSelfTraining
+cd CostSensitiveSelfTraining
 pip install -r requirements.txt
 ```
 3. We recommend installation of [W&B](https://wandb.ai/) (weights and biases for detailed logging of performance metrics 
