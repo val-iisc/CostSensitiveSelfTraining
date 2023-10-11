@@ -30,11 +30,14 @@ pip install -r requirements.txt
 ### Training
 We present a sample training command for CIFAR-10 under imbalance factor 100 and labeled and unlabeled data split ratio of 1/4.  We can change the objective as per requirement (--M argument, see docs)
 ```bash
-python trainMetricOpt.py --M mean_recall_coverage --world-size 1 --rank 0 --multiprocessing-distributed --uratio 4 --num_labels 12500 --save_name <local logging name> --dataset cifar10 --imbalance 100 --num_classes 10 --amp --net WideResNet --overwrite  --widen_factor 2 --wandb-project <Project name> --wandb-runid <your-runid> --vanilla_opt True --ult True  --num_workers 4
+python trainMetricOpt.py --M mean_recall_coverage --world-size 1 --rank 0 --multiprocessing-distributed --uratio 4 --num_labels 12500 --save_name <local logging name> --dataset cifar10 --imbalance 100 --num_classes 10 --amp --net WideResNet --overwrite  --widen_factor 2 --wandb-project <Project name> --wandb-runid <your-runid> --vanilla_opt True --ult True  --num_workers 4 --seed 0
 ```
 
 ### Evaluation
-
+We load the saved checkpoint and evaluate the model on the same seed split of the dataset
+```bash
+python eval.py --load <PATH> --dataset cifar10 --uratio 4 --net WideResNet --widen_factor 2 --imbalance 100 --num_classes 10 --seed 0
+```
 ## Results
 We provide a summary of results for CIFAR-10 LT for the two objectives below, in comparison to the state-of-the-art:
 
