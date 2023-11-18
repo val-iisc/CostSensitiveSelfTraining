@@ -87,7 +87,7 @@ def count_parameters(model):
 import numpy as np
 from sklearn.metrics import precision_score, recall_score, accuracy_score, f1_score, confusion_matrix
 
-def get_metrics(outputs, labels, classes):
+def get_metrics(outputs, labels, classes, tag="test/"):
     '''
     returns a dictionary of computed metrics
     ARGS
@@ -166,4 +166,7 @@ def get_metrics(outputs, labels, classes):
         metrics["coverage_" + name] = coverages[i]
     
     metrics["min_coverage"] = min(coverages)
+    metrics_ = {}
+    for key in metrics.keys():
+        metrics_[tag + key] = metrics[key]
     return metrics
